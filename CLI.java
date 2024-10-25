@@ -13,6 +13,7 @@ public class CLI {
 
         while (true) {
 //            System.out.print("> ");
+            System.out.println(commandHandler.getCurrentDir());
             String input = scanner.nextLine();
 
             //handle exit case
