@@ -20,6 +20,8 @@ public class CommandHandler {
             cd();
         else if (command.equalsIgnoreCase("cd")&& args.length>=1)
             cd(args[0]);
+        else if (command.equalsIgnoreCase("rm"))
+            rm(args[0]);  
         else if (command.equalsIgnoreCase("exit"))
             exit();
     }
@@ -28,6 +30,7 @@ public class CommandHandler {
         System.out.println("help   - Displays available commands");
         System.out.println("echo   - Echoes the input text");
         System.out.println("cd   - Used to change the current directory of the terminal");
+        System.out.println("rm   - Removes each given file");
         System.out.println("exit   - Exits the CLI");
     }
     public void cd(){                      // go to the home directory
@@ -53,6 +56,21 @@ public class CommandHandler {
                 System.out.println("Directory does not exist: " + targetPath.toString());
             }
         }
+    }
+       public void rm(String arg){
+            Path filePath = currentDir.resolve(arg);
+            System.out.println("Attempting to delete: " + filePath);
+            try {
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    System.out.println("File deleted successfully: " + arg);
+                } else {
+                    System.out.println("File not found : " + arg);
+                }
+            } catch (IOException e) {
+                System.out.println("Error deleting file: " + e.getMessage());
+            }
+        
     }
     
     public void exit(){}
