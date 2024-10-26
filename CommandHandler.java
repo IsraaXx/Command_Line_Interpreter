@@ -24,6 +24,8 @@ public class CommandHandler {
             cd(args[0]);
         else if (command.equalsIgnoreCase("rm"))
             rm(args[0]); 
+        else if (command.equalsIgnoreCase("mkdir"))
+           mkdir(args);     
         else if (command.equalsIgnoreCase("pwd"))
             pwd(); 
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
@@ -48,6 +50,7 @@ public class CommandHandler {
         System.out.println("echo   - Echoes the input text");
         System.out.println("cd     - Used to change the current directory of the terminal");
         System.out.println("rm     - Removes each given file");
+        System.out.println("mkdir   - Creates a directory with each given name ");
         System.out.println("pwd    - Print the working directory");
         System.out.println("ls -r  -Lists the contents (files and directories) of the current directory in reverse order");
         System.out.println("mv     -Moves one or more files/directories to a directory or rename files/directories. ");
@@ -90,8 +93,22 @@ public class CommandHandler {
             } catch (IOException e) {
                 System.out.println("Error deleting file: " + e.getMessage());
             }
-        
     }
+        public void mkdir(String [] args){
+        for (String path : args) {
+            File directory = new File(path);
+            if (!directory.exists()) {
+                boolean success = directory.mkdirs();
+                if (success) {
+                    System.out.println("Directory created successfully at " + directory.getAbsolutePath());
+                } else {
+                    System.err.println("Failed to create directory");
+                }
+            } else {
+                System.err.println("Directory already exists");
+            }
+        }
+}
     public void pwd()
     {
         System.out.println("Current working directory: " + currentDir);
