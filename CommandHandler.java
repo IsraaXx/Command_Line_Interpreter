@@ -4,11 +4,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.nio.file.DirectoryStream;
-import java.util.Arrays;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -40,7 +35,10 @@ public class CommandHandler {
             {
                 ls_r(args[1]);
             }else ls_r(System.getProperty("user.dir")); // Use the specified path or default to current directory
-        
+
+        else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-a")) {
+            ls_a(); // Implement this method to list all files, including hidden ones
+        }
         else if (command.equalsIgnoreCase("touch")) {
             if (args.length == 0) {
                 System.out.println("Please specify a file name.");
@@ -157,6 +155,28 @@ public class CommandHandler {
  
         }
             
+    }
+    public void ls_a() {
+        File dir = currentDir.toFile(); // get the current directory as a File object
+
+        if (!dir.exists() || !dir.isDirectory()) {
+            System.out.println("This directory does not exist or is not a directory.");
+            return;
+        }
+
+        String[] files = dir.list(); // list all files in the directory
+        if (files == null || files.length == 0) {
+            System.out.println("The directory is empty.");
+        } else {
+            System.out.println("All files (including hidden):");
+            for (String fileName : files) {
+                File file = new File(dir, fileName);
+                if (file.isHidden() || fileName.startsWith(".")) {
+                    System.out.print("[Hidden] ");
+                }
+                System.out.println(fileName);
+            }
+        }
     }
     public File makeAbsolute(String path) {
         Path filePath = Paths.get(path);
