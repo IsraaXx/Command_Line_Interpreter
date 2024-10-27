@@ -40,6 +40,14 @@ public class CommandHandler {
             {
                 ls_r(args[1]);
             }else ls_r(System.getProperty("user.dir")); // Use the specified path or default to current directory
+        
+        else if (command.equalsIgnoreCase("touch")) {
+            if (args.length == 0) {
+                System.out.println("Please specify a file name.");
+            } else {
+                touch(args);
+            }
+        }
         else if (command.equalsIgnoreCase("mv")&& args.length>=2)
         try {
             mv(args[0], args[1]);
@@ -173,6 +181,28 @@ public class CommandHandler {
         }
         else { // Destination does not exist, treat it as a rename
             Files.move(src.toPath(), Dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+    public void touch(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Please specify a file name.");
+            return;
+        }
+        for (String fileName : args) {
+            Path filePath = currentDir.resolve(fileName);
+            try {
+                if (Files.exists(filePath)) {
+                    // Update last modified time
+                    Files.setLastModifiedTime(filePath, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis()));
+                    System.out.println("File '" + fileName + "' timestamp updated.");
+                } else {
+                    // Create a new file
+                    Files.createFile(filePath);
+                    System.out.println("File '" + fileName + "' created.");
+                }
+            } catch (IOException e) {
+                System.out.println("Error creating file: " + e.getMessage());
+            }
         }
     }
     
