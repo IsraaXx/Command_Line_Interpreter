@@ -52,16 +52,23 @@ public class CommandHandler {
             System.out.println(" Wrong Command. Type 'help' for the list of commands.");
     }
     public void help(){
+
         System.out.println("Available commands:");
         System.out.println("help   - Displays available commands");
+        System.out.println("pwd    - Show current directory");
+        System.out.println("cd     - Change directory");
+        System.out.println("ls     - List files in current directory");
+        System.out.println("ls -a  - List all files, including hidden ones");
+        System.out.println("ls -r  - List files in reverse order");
+        System.out.println("mkdir  - Create a directory");
+        System.out.println("rmdir  - Remove a directory");
+        System.out.println("touch  - Create a file");
+        System.out.println("mv     - Move or rename a file");
+        System.out.println("rm     - Remove a file");
+        System.out.println("cat    - Display file contents");
         System.out.println("echo   - Echoes the input text");
-        System.out.println("cd     - Used to change the current directory of the terminal");
-        System.out.println("rm     - Removes each given file");
-        System.out.println("mkdir   - Creates a directory with each given name ");
-        System.out.println("pwd    - Print the working directory");
-        System.out.println("ls -r  -Lists the contents (files and directories) of the current directory in reverse order");
-        System.out.println("mv     -Moves one or more files/directories to a directory or rename files/directories. ");
         System.out.println("exit   - Exits the CLI");
+
     }
     public void cd(){                      // go to the home directory
         currentDir = Paths.get(System.getProperty("user.home"));
