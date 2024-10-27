@@ -24,10 +24,14 @@ public class CommandHandler {
             cd();
         else if (command.equalsIgnoreCase("cd")&& args.length>=1)
             cd(args[0]);
-        else if (command.equalsIgnoreCase("rm"))
-            rm(args[0]); 
-        else if (command.equalsIgnoreCase("mkdir"))
-           mkdir(args);     
+        else if (command.equalsIgnoreCase("rm")){
+            if(args.length==0)
+               System.out.println("Please specify a file name");
+            rm(args); }
+        else if (command.equalsIgnoreCase("mkdir")){
+            if(args.length==0)
+               System.out.println("Please Enter Directory Name to make");
+           mkdir(args);}
         else if (command.equalsIgnoreCase("pwd"))
             pwd(); 
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
@@ -100,20 +104,22 @@ public class CommandHandler {
             }
         }
     }
-    public void rm(String arg){
-            Path filePath = currentDir.resolve(arg);
+    public void rm(String[] arg){
+        for(String path: arg){
+            Path filePath = currentDir.resolve(path);
             System.out.println("Attempting to delete: " + filePath);
             try {
                 if (Files.exists(filePath)) {
                     Files.delete(filePath);
-                    System.out.println("File deleted successfully: " + arg);
+                    System.out.println("File deleted successfully: " + path);
                 } else {
-                    System.out.println("File not found : " + arg);
+                    System.out.println("File not found : " + path);
                 }
             } catch (IOException e) {
                 System.out.println("Error deleting file: " + e.getMessage());
             }
     }
+}
         public void mkdir(String [] args){
         for (String path : args) {
             File directory = new File(path);
