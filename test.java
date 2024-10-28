@@ -75,4 +75,81 @@ public class test {
 
     }
 
+    @Test
+    void testTouchCreateNewFile() throws IOException {
+        String newFileName = "newTestFile.txt";
+        Path newFilePath = initialDir.resolve(newFileName);
+        Files.deleteIfExists(newFilePath);
+        // Create a new file using the touch command
+        commandHandler.touch(new String[]{newFileName});
+        // Check that the file was created
+        assertTrue(Files.exists(newFilePath), "touch should create a new file if it doesn't exist");
+        Files.deleteIfExists(newFilePath);
+    }
+
+    @Test
+    void testTouchUpdateTimestamp() throws IOException {
+        // Define the file name and create it beforehand
+        String fileName = "existingTestFile.txt";
+        Path filePath = initialDir.resolve(fileName);
+        Files.deleteIfExists(filePath);
+        Files.createFile(filePath);
+        long initialTimestamp = Files.getLastModifiedTime(filePath).toMillis();
+
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("The test was interrupted unexpectedly.");
+        }
+
+        // Call touch on the existing file to update its timestamp
+        commandHandler.touch(new String[]{fileName});
+        long updatedTimestamp = Files.getLastModifiedTime(filePath).toMillis();
+
+        // Check that the timestamp was updated
+        assertTrue(updatedTimestamp > initialTimestamp, "touch should update the file's timestamp if it already exists");
+
+        Files.deleteIfExists(filePath);
+    }
+    @Test
+    void testLsAListsHiddenFiles() throws IOException { //This test checks whether the ls -a command lists hidden files correctly.
+        // Create a hidden file
+        String hiddenFileName = ".hiddenTestFile.txt";
+        Path hiddenFilePath = initialDir.resolve(hiddenFileName);
+        Files.deleteIfExists(hiddenFilePath);
+        Files.createFile(hiddenFilePath);
+
+        java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+        System.setOut(new java.io.PrintStream(outputStream));
+        commandHandler.ls_a();
+
+        // Check if the output includes the hidden file
+        String output = outputStream.toString();
+        assertTrue(output.contains(hiddenFileName), "ls -a should list hidden files");
+        System.setOut(System.out);
+        Files.deleteIfExists(hiddenFilePath);
+    }
+
+    @Test
+    void testLsAListsAllFiles() throws IOException { // This test checks whether the ls command (without options) lists all files in the directory, including regular files and hidden files
+        // Create a visible file
+        String visibleFileName = "visibleTestFile.txt";
+        Path visibleFilePath = initialDir.resolve(visibleFileName);
+        Files.deleteIfExists(visibleFilePath);
+        Files.createFile(visibleFilePath);
+
+        java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+        System.setOut(new java.io.PrintStream(outputStream));
+        commandHandler.ls_a();
+
+        // Check if the output includes the visible file
+        String output = outputStream.toString();
+        assertTrue(output.contains(visibleFileName), "ls -a should list visible files");
+
+        System.setOut(System.out);
+        Files.deleteIfExists(visibleFilePath);
+    }
+    
+
 }
