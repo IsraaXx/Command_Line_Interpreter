@@ -1,15 +1,16 @@
+package org.example;
+
+import javax.security.sasl.SaslClient;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
-import java.io.IOException;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.Scanner;
 
 public class CommandHandler {
-    private Path currentDir; 
-    
+    private Path currentDir;
+
     public CommandHandler(){
         this.currentDir = Paths.get(System.getProperty("user.dir"));
     }
@@ -26,14 +27,15 @@ public class CommandHandler {
             cd(args[0]);
         else if (command.equalsIgnoreCase("rm")){
             if(args.length==0)
-               System.out.println("Please specify a file name");
+                System.out.println("Please specify a file name");
             rm(args); }
         else if (command.equalsIgnoreCase("mkdir")){
             if(args.length==0)
-               System.out.println("Please Enter Directory Name to make");
-           mkdir(args);}
+                System.out.println("Please Enter Directory Name to make");
+            mkdir(args);}
         else if (command.equalsIgnoreCase("pwd"))
-            pwd(); 
+            pwd();
+
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
             if(args.length > 1)
             {
@@ -43,6 +45,8 @@ public class CommandHandler {
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-a")) {
             ls_a(); // Implement this method to list all files, including hidden ones
         }
+        else if (command.equalsIgnoreCase("ls"))
+            ls(args);
         else if (command.equalsIgnoreCase("touch")) {
             if (args.length == 0) {
                 System.out.println("Please specify a file name.");
@@ -51,13 +55,16 @@ public class CommandHandler {
             }
         }
         else if (command.equalsIgnoreCase("mv")&& args.length>=2)
-        try {
-            mv(args[0], args[1]);
-        } catch (IOException e) {
-            System.out.println("Error moving file: " + e.getMessage());
+            try {
+                mv(args[0], args[1]);
+            } catch (IOException e) {
+                System.out.println("Error moving file: " + e.getMessage());
+            }
+        else if (command.equalsIgnoreCase("rmdir")) {
+            rmdir(args);
+        } else if (command.equalsIgnoreCase("cat")) {
+            cat(args);
         }
-        else if (command.equalsIgnoreCase("exit"))
-            exit();
         else
             System.out.println(" Wrong Command. Type 'help' for the list of commands.");
     }
@@ -85,13 +92,13 @@ public class CommandHandler {
     }
     public void cd(String arg){        // if args (..) means change current path to previous path 
         if (arg.equals("..")){
-        Path previousPath = currentDir.getParent();
-        if(previousPath!=null)
-            currentDir=previousPath;
-        else 
+            Path previousPath = currentDir.getParent();
+            if(previousPath!=null)
+                currentDir=previousPath;
+            else
                 System.out.println("No previous paths available!");
-            
-    }
+
+        }
         else {     // argument is a path full or a short one (full or relative)
             Path targetPath = Paths.get(arg);
             if (!targetPath.isAbsolute()) {   // convert the target path if it was relative to absolute same structure as currentDir
@@ -118,9 +125,9 @@ public class CommandHandler {
             } catch (IOException e) {
                 System.out.println("Error deleting file: " + e.getMessage());
             }
+        }
     }
-}
-        public void mkdir(String [] args){
+    public void mkdir(String [] args){
         for (String path : args) {
             File directory = new File(path);
             if (!directory.exists()) {
@@ -134,11 +141,44 @@ public class CommandHandler {
                 System.err.println("Directory already exists");
             }
         }
-}
+    }
     public void pwd()
     {
         System.out.println("Current working directory: " + currentDir);
     }
+    public void ls(String[] args) {
+        File dir;
+        if (args.length == 0)
+            dir = currentDir.toFile();
+        // Store the directory/file in a File object
+        else
+            dir = new File(args[0]);
+        // Check if the path exists
+        if (!dir.exists()) {
+            System.out.println("This directory doesn't exist.");
+        } else if (!dir.isDirectory()) {
+            System.out.println("This is not a directory.");
+        } else if (!dir.canRead()) {
+            System.out.println("this directory can't be read.");
+        } else {
+            // Get the list of files and directories
+            String[] dirList = dir.list();
+
+            // Check if the directory is empty
+            if (dirList == null || dirList.length == 0) {
+                System.out.println("This directory is empty.");
+            } else {
+                // Iterate through the list and print non-hidden files
+                for (String file : dirList) {
+                    File fileName = new File(dir, file);
+                    if (!fileName.isHidden()) {
+                        System.out.println(file);
+                    }
+                }
+            }
+        }
+    }
+
     public void ls_r(String arg)
     {
         File Dir = new File(arg);//store current directory in file
@@ -158,9 +198,9 @@ public class CommandHandler {
             else {
                 System.out.println("The directory is empty ");
             }
- 
+
         }
-            
+
     }
     public void ls_a() {
         File dir = currentDir.toFile(); // get the current directory as a File object
@@ -200,9 +240,9 @@ public class CommandHandler {
             System.out.println("This source directory does not exist");
         }
         if (Dst.isFile()) { //in this case we will rename src with destination
-           System.out.println("Can't move into file.");
+            System.out.println("Can't move into file.");
         }
-            if (Dst.exists() && Dst.isDirectory()) {// Move the source to the destination directory
+        if (Dst.exists() && Dst.isDirectory()) {// Move the source to the destination directory
             Files.move(src.toPath(), Dst.toPath().resolve(src.getName()), StandardCopyOption.REPLACE_EXISTING);//If src.txt already exists in the destination, it will be replaced due to will be deleted and replaced with the file being moved.
         }
         else { // Destination does not exist, treat it as a rename
@@ -231,6 +271,64 @@ public class CommandHandler {
             }
         }
     }
-    
-    public void exit(){}
+    public void rmdir(String[] args){
+        if (args.length == 0)
+            System.out.println("Specify an empty directory to be removed.");
+        else{
+            for (String str: args){
+                File dir = new File(str);
+                if (!dir.exists())
+                    System.out.println("Failed to remove "+str+" :Directory doesn't exist.");
+                else if (!dir.isDirectory()) {
+                    System.out.println("Failed to remove "+str+" :Not a directory.");
+                } else{
+                    String[] dirList = dir.list();
+                    if (dirList != null && dirList.length > 0) {
+                        System.out.println("Failed to remove '" + str + ": Directory not empty");
+                        return;
+                    }
+
+                    // Attempt to remove the directory
+                    if (dir.delete()) {
+                        System.out.println("Directory '" + str + ": removed successfully.");
+                    } else {
+                        System.out.println("Failed to remove '" + str + ": Permission denied");
+                    }
+                }
+            }
+        }
+    }
+    public void cat(String[] args){
+        if (args.length == 0){
+            System.out.println("Enter the text you want to display.");
+            Scanner input = new Scanner(System.in);
+            String scannedInput = input.nextLine();
+            System.out.println(scannedInput);
+        }
+        else{
+            for (String fileName: args){
+                File file = new File(fileName);
+                if (!file.exists()){
+                    System.out.println("Failed to concatenate "+fileName+": File doesn't exist.");
+                }
+                else if (!file.canRead()){
+                    System.out.println("Failed to concatenate "+fileName+": Permission denied.");
+                } else if (!file.isFile()) {
+                    System.out.println("Failed to concatenate "+fileName+": is not a file.");
+                } else if (file.length() == 0){
+                    System.out.println("Failed to concatenate "+fileName+": File is empty.");
+                }
+                try{
+                    Scanner fileReader = new Scanner(file);
+                    while (fileReader.hasNextLine()){
+                        String line = fileReader.nextLine();
+                        System.out.println(line);
+                    }
+                    fileReader.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("Failed to concatenate "+fileName+": An error occurred.");
+                }
+            }
+        }
+    }
 }
