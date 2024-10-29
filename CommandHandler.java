@@ -129,7 +129,8 @@ public class CommandHandler {
     }
     public void mkdir(String [] args){
         for (String path : args) {
-            File directory = new File(path);
+            Path newDirPath = currentDir.resolve(path);
+            File directory = newDirPath.toFile();
             if (!directory.exists()) {
                 boolean success = directory.mkdirs();
                 if (success) {
