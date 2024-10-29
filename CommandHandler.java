@@ -86,6 +86,7 @@ public class CommandHandler {
         System.out.println("rm     - Remove a file");
         System.out.println("cat    - Display file contents");
         System.out.println("echo   - Echoes the input text");
+        System.out.println(">>     - Redirects the output of the first command to be append to a file.");
         System.out.println("exit   - Exits the CLI");
 
     }
@@ -189,11 +190,15 @@ public class CommandHandler {
         }
     }
 
-    public void ls_r(String arg)
+   public void ls_r(String arg)//take specific arg or by default get the content of current directory
     {
-        File Dir = new File(arg);//store current directory in file
+        File Dir = currentDir.toFile(); // get the current directory as a File object
         if (!Dir.exists()) {
             System.out.println("This directory does not exist");
+        }
+        if(!Dir.isDirectory)
+        {
+            System.out.println("This argument is not a directory");
         }
         else{
             String [] arr = Dir.list(); //list content of directory that store in file
