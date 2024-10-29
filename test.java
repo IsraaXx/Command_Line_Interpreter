@@ -299,5 +299,10 @@ public class test {
             validFile.delete(); // Cleanup
         }
     }
+     @Test
+    public void testPwdCommand() {
+        String expectedDirectory = System.getProperty("user.dir");
+        assertEquals(("Current working directory: "+expectedDirectory), commandHandler.pwd());
+    }
 
 }
