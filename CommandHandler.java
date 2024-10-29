@@ -21,6 +21,9 @@ public class CommandHandler {
     public void handleCommands(String command, String[] args){
         if (command.equalsIgnoreCase("help"))
             help();
+        else if (command.equalsIgnoreCase("echo")) {
+                echo(args);
+            }
         else if (command.equalsIgnoreCase("cd")&& args.length==0)
             cd();
         else if (command.equalsIgnoreCase("cd")&& args.length>=1)
@@ -86,6 +89,13 @@ public class CommandHandler {
         System.out.println("echo   - Echoes the input text");
         System.out.println("exit   - Exits the CLI");
 
+    }
+    public void echo(String[] args) {
+        if (args.length == 0) {
+            System.out.println("No input provided for echo.");
+        } else {
+            System.out.println(String.join(" ", args));
+        }
     }
     public void cd(){                      // go to the home directory
         currentDir = Paths.get(System.getProperty("user.home"));
