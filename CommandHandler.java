@@ -21,9 +21,8 @@ public class CommandHandler {
     public void handleCommands(String command, String[] args){
         if (command.equalsIgnoreCase("help"))
             help();
-        else if (command.equalsIgnoreCase("echo")) {
-                echo(args);
-            }
+        else if (command.equalsIgnoreCase("echo"))
+            echo(args);
         else if (command.equalsIgnoreCase("cd")&& args.length==0)
             cd();
         else if (command.equalsIgnoreCase("cd")&& args.length>=1)
@@ -100,7 +99,7 @@ public class CommandHandler {
     public void cd(){                      // go to the home directory
         currentDir = Paths.get(System.getProperty("user.home"));
     }
-    public void cd(String arg){        // if args (..) means change current path to previous path 
+    public void cd(String arg){        // if args (..) means change current path to previous path
         if (arg.equals("..")){
             Path previousPath = currentDir.getParent();
             if(previousPath!=null)
@@ -161,7 +160,7 @@ public class CommandHandler {
         File dir;
         if (args.length == 0)
             dir = currentDir.toFile();
-        // Store the directory/file in a File object
+            // Store the directory/file in a File object
         else
             dir = new File(args[0]);
         // Check if the path exists
@@ -182,7 +181,7 @@ public class CommandHandler {
                 // Iterate through the list and print non-hidden files
                 for (String file : dirList) {
                     File fileName = new File(dir, file);
-                    if (!fileName.isHidden()) {
+                    if (!fileName.isHidden() && !fileName.getName().startsWith(".")) {
                         System.out.println(file);
                     }
                 }
