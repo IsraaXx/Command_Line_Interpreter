@@ -153,9 +153,9 @@ public class CommandHandler {
             }
         }
     }
-    public void pwd()
+   public String pwd()
     {
-        System.out.println("Current working directory: " + currentDir);
+       return ("Current working directory: " + currentDir);
     }
     public void ls(String[] args) {
         File dir;
