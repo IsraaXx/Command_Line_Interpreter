@@ -71,8 +71,25 @@ public class test {
 
         commandHandler.rm(new String[]{nonExistentFileName});
         System.out.println("Attempt to delete the non-existent file!");
+    }
+    
+    @Test
+    void testMkdirCommand() throws IOException{
+        String [] arg = {"testDir1","test2\\New"};
+        commandHandler.mkdir(arg);
+        File directory = new File("testDir1");
+        File directory2 = new File("test2\\New");
+        assertTrue((directory.exists()&&directory2.exists())&&(directory.isDirectory()&&directory2.isDirectory()),"New Directories created");
 
+    }
 
+    @Test
+    void testMkdirCommandExisting() throws IOException{
+        File directory = new File("testDir");
+        directory.mkdir();
+        String [] arg = {"testDir"};
+        commandHandler.mkdir(arg);
+        assertTrue(directory.exists()&&directory.isDirectory(),"Directory Is already Exists");
     }
 
     @Test
