@@ -196,7 +196,7 @@ public class CommandHandler {
         if (!Dir.exists()) {
             System.out.println("This directory does not exist");
         }
-        if(!Dir.isDirectory)
+        if(!Dir.isDirectory())
         {
             System.out.println("This argument is not a directory");
         }
