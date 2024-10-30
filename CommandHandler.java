@@ -56,12 +56,8 @@ public class CommandHandler {
                 touch(args);
             }
         }
-        else if (command.equalsIgnoreCase("mv")&& args.length>=2)
-            try {
-                mv(args[0], args[1]);
-            } catch (IOException e) {
-                System.out.println("Error moving file: " + e.getMessage());
-            }
+       else if (command.equalsIgnoreCase("mv"))
+                mv(args);
         else if (command.equalsIgnoreCase("rmdir")) {
             rmdir(args);
         } else if (command.equalsIgnoreCase("cat")) {
@@ -275,31 +271,85 @@ public class CommandHandler {
             }
         }
     }
-    public File makeAbsolute(String path) {
-        Path filePath = Paths.get(path);
-        if (!filePath.isAbsolute()) {
-            filePath = currentDir.resolve(filePath);
+    
+    public void mv(String[] args) {   /*case1 multiple src to destination
+                                        case2 src file /directory to destination
+                                        case3 src file to destination file (rename) */
+        if (args.length < 2) {
+            System.out.println("Not enough arguments.please provide <source(s)> <destination>");
+            return;
         }
-        return filePath.toFile();
+
+        String destinationPath = args[args.length - 1];//take the last element in args to be destination
+        File destination = new File(destinationPath);
+
+        // Check if multiple sources are provided
+        if (args.length > 2) {
+            if (!destination.isDirectory()) {
+                System.out.println("When moving multiple files, the destination must be a directory.");
+                return;
+            }
+            if (!destination.exists()) {
+                System.out.println("Destination directory does not exist.");
+                return;
+            }
+            // Move each source file to the destination directory
+            for (int i = 0; i < args.length - 1; i++) {
+                File source = new File(args[i]);
+                mvSingleFileToDirectory(source, destination);
+            }
+        } else {
+            // Single source: rename or move the file or directory
+            File source = new File(args[0]);
+            if (destination.exists() && destination.isDirectory()) {
+                moveOrRenameSingle(source, destination);
+            } else {
+                if (!destination.exists()) {
+                    System.out.println("Destination does not exist.");
+                    return;
+                }
+                // If the destination is not a directory, it's treated as a rename operation
+                moveOrRenameSingle(source, destination);
+            }
+        }
     }
-    public void mv(String source,String destination) throws IOException
-    {
-        File src = makeAbsolute(source);
-        File Dst = makeAbsolute(destination);
-        if(!src.exists())
-        {
-            System.out.println("This source directory does not exist");
+    // method to move or rename a single file or directory <file,file>
+    private void moveOrRenameSingle(File source, File destination) {
+        if (!source.exists()) {
+            System.out.println("Source file or directory does not exist.");
+            return;
         }
-        if (Dst.isFile()) { //in this case we will rename src with destination
-            System.out.println("Can't move into file.");
-        }
-        if (Dst.exists() && Dst.isDirectory()) {// Move the source to the destination directory
-            Files.move(src.toPath(), Dst.toPath().resolve(src.getName()), StandardCopyOption.REPLACE_EXISTING);//If src.txt already exists in the destination, it will be replaced due to will be deleted and replaced with the file being moved.
-        }
-        else { // Destination does not exist, treat it as a rename
-            Files.move(src.toPath(), Dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        // If the destination exists as a directory, move the source inside it
+        if (destination.isDirectory()) {
+            mvSingleFileToDirectory(source, destination);
+        } else {
+            // If destination is not a directory, rename or overwrite
+            try {
+                Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                //the old file will be replaced due to will be deleted and replaced with the file being moved.
+                System.out.println("Moved/Renamed: " + source + " to " + destination); //rename src file to dest and save the content of srcfile and delete destination 
+            } catch (IOException e) {
+                System.out.println("Error: Unable to move or rename file " + source + " to " + destination + " - " + e.getMessage());
+            }
         }
     }
+    //  method to move a single file to a directory
+    private void mvSingleFileToDirectory(File source, File destinationDir) {
+        if (!source.exists()) {
+            System.out.println("Source file or directory does not exist.");
+            return;
+        }
+
+        File target = new File(destinationDir, source.getName());
+        try {
+            Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Moved: " + source + " to " + target);
+        } catch (IOException e) {
+            System.out.println("Error: Unable to move file " + source + " to " + target + " - " + e.getMessage());
+        }
+    }
+    
     public void touch(String[] args) {
         if (args.length == 0) {
             System.out.println("Please specify a file name.");
