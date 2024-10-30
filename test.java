@@ -16,6 +16,7 @@ public class test {
     private CommandHandler commandHandler;
     private Path initialDir;
 private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+    private File tempDir;
     private File sourceFile;
     private File destinationDir;
     private File destinationFile;
