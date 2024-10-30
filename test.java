@@ -1,6 +1,7 @@
 package org.example;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -15,11 +16,29 @@ public class test {
     private CommandHandler commandHandler;
     private Path initialDir;
 private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+    private File sourceFile;
+    private File destinationDir;
+    private File destinationFile;
     @BeforeEach
-    void setUp() {
+    void setUp()  throws IOException {
         commandHandler = new CommandHandler();
         initialDir = commandHandler.getCurrentDir();
-         System.setOut(new PrintStream(outputStreamCaptor)); // Capture console output
+        System.setOut(new PrintStream(outputStreamCaptor)); // Capture console output
+        tempDir = Files.createTempDirectory("testDir").toFile();// Create a temporary directory for testing
+        tempDir.deleteOnExit(); // Ensure it gets deleted after tests
+        sourceFile = new File(tempDir, "source.txt");
+        Files.write(sourceFile.toPath(), "This is a test file.".getBytes());
+        destinationDir = new File(tempDir, "destinationDir");// Create destination directory
+        destinationDir.mkdir();
+        destinationFile = new File(tempDir, "destination.txt");
+    }
+    @AfterEach
+    public void cleanAfterTest() {
+        // Cleanup the temporary files and directories after tests
+        if (sourceFile.exists()) sourceFile.delete();
+        if (destinationDir.exists()) destinationDir.delete();
+        if (destinationFile.exists()) destinationFile.delete();
+        if (tempDir.exists()) tempDir.delete();
     }
     @Test
     void testCdToHomeDirectory() {
@@ -329,7 +348,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         }
     }
      @Test
-    public void testPwdCommand() {
+    void testPwdCommand() {
         String expectedDirectory = System.getProperty("user.dir");
         assertEquals(("Current working directory: "+expectedDirectory), commandHandler.pwd());
     }
@@ -348,7 +367,7 @@ void testLs_rCurrentDirectory() {
                "Expected directory listing message in console output.");
 }
     @Test
-        public void testLs_rWithSpecificDirectory() throws IOException {
+        void testLs_rWithSpecificDirectory() throws IOException {
            
             Path tempDir = Files.createTempDirectory("testDir");
             Files.createFile(tempDir.resolve("file1.txt"));
@@ -372,12 +391,38 @@ void testLs_rCurrentDirectory() {
         }
     
     @Test
-        public void testLs_rWithNonExistentDirectory() {
+         void testLs_rWithNonExistentDirectory() {
             String[] args = {"-r", "nonExistentDir"};
             commandHandler.ls_r(args);
     
             
             assertEquals("This directory does not exist", outputStreamCaptor.toString().trim());
         }
+    //mv command tests
+    @Test
+     void testMoveFileToDirectory() { //test for move filesrc to dirdestination
+        String[] args = {sourceFile.getAbsolutePath(), destinationDir.getAbsolutePath()};
+        commandHandler.mv(args);
+        
+        // Verify that the source file no longer exists
+        assertFalse(sourceFile.exists(), "Source file should not exist after moving");
+
+        // Verify that the file exists in the destination directory
+        File movedFile = new File(destinationDir, sourceFile.getName());
+        assertTrue(movedFile.exists(), "File should exist in the destination directory");
+    }
+
+    @Test
+    void testRenameFile() { //test for rename filesrc to filedestination
+        String[] args = {sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath()};
+        commandHandler.mv(args);
+        
+        // Verify that the source file no longer exists
+        assertFalse(destinationFile.exists(), "Source file should not exist after renaming");
+    
+        // Verify that the file has been renamed
+        assertTrue(sourceFile.exists(), "File should exist with the new name");
+    }
+
 
 }
