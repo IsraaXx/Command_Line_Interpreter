@@ -19,7 +19,7 @@ public class CommandHandler {
         return currentDir;
     }
     public void handleCommands(String command, String[] args){
-        if (command.equalsIgnoreCase("help"))
+        if (command.equalsIgnoreCase("help")&&args.length==0)
             help();
         else if (command.equalsIgnoreCase("echo"))
             echo(args);
@@ -34,10 +34,13 @@ public class CommandHandler {
         else if (command.equalsIgnoreCase("mkdir")){
             if(args.length==0)
                 System.out.println("Please Enter Directory Name to make");
-            mkdir(args);}
+            mkdir(args);}   
+        else if (args.length>0 && (args[0].equals(">"))){
+            write(args,command);
+
+        }
         else if (command.equalsIgnoreCase("pwd"))
             pwd();
-
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
              ls_r(args); // Use the specified path or default to current directory
 
@@ -83,6 +86,7 @@ public class CommandHandler {
         System.out.println("rm     - Remove a file");
         System.out.println("cat    - Display file contents");
         System.out.println("echo   - Echoes the input text");
+        System.out.println(">      - Redirects the output of the first command to be written to a file.");
         System.out.println(">>     - Redirects the output of the first command to be append to a file.");
         System.out.println("exit   - Exits the CLI");
 
@@ -150,8 +154,35 @@ public class CommandHandler {
             }
         }
     }
-   public String pwd()
-    {
+
+    public void write(String[] args,String command){
+        Path filePath = currentDir.resolve(args[1]); //  file path
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out; // Save original System.out
+        System.setOut(new PrintStream(buffer)); // Redirect System.out to buffer
+        
+        if (command.equals("ls")) {
+            ls(new String[0]);  }
+        else if (command.equals("help")){
+            help();
+        }    
+        else if(command.equals("pwd")){
+            System.out.print(pwd());
+        }
+
+        // Restore original System.out to console to continue the program
+        System.setOut(originalOut);
+
+        // Write captured output to the specified file
+        try (FileWriter writer = new FileWriter(filePath.toFile())) {
+            writer.write(buffer.toString());
+            System.out.println("Output written to " + filePath);
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+    }
+           
+    }
+   public String pwd() {
        return ("Current working directory: " + currentDir);
     }
     public void ls(String[] args) {
