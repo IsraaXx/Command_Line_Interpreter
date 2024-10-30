@@ -2,7 +2,6 @@ package org.example;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -15,11 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class test {
     private CommandHandler commandHandler;
     private Path initialDir;
-
+private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     @BeforeEach
     void setUp() {
         commandHandler = new CommandHandler();
         initialDir = commandHandler.getCurrentDir();
+         System.setOut(new PrintStream(outputStreamCaptor)); // Capture console output
     }
     @Test
     void testCdToHomeDirectory() {
@@ -304,5 +304,51 @@ public class test {
         String expectedDirectory = System.getProperty("user.dir");
         assertEquals(("Current working directory: "+expectedDirectory), commandHandler.pwd());
     }
+    //ls -r command tests
+    @Test
+void testLs_rCurrentDirectory() {
+    
+    String[] args = {"-r"};
+    commandHandler.ls_r(args);
+    
+    // Capture output and trim whitespace for consistent comparison
+    String output = outputStreamCaptor.toString().trim();
+    
+    // Check if the output contains expected content
+    assertTrue(output.contains("Directory contents in reverse order:"), 
+               "Expected directory listing message in console output.");
+}
+    @Test
+        public void testLs_rWithSpecificDirectory() throws IOException {
+           
+            Path tempDir = Files.createTempDirectory("testDir");
+            Files.createFile(tempDir.resolve("file1.txt"));
+            Files.createFile(tempDir.resolve("file2.txt"));
+            Files.createFile(tempDir.resolve("file3.txt"));
+    
+            String[] args = {"-r", tempDir.toString()};
+            commandHandler.ls_r(args);
+    
+            // Check if the output contains the file names in reverse order
+            String output = outputStreamCaptor.toString();
+            assertTrue(output.contains("file3.txt"));
+            assertTrue(output.contains("file2.txt"));
+            assertTrue(output.contains("file1.txt"));
+    
+            // Cleanup temporary files
+            Files.deleteIfExists(tempDir.resolve("file1.txt"));
+            Files.deleteIfExists(tempDir.resolve("file2.txt"));
+            Files.deleteIfExists(tempDir.resolve("file3.txt"));
+            Files.deleteIfExists(tempDir);
+        }
+    
+    @Test
+        public void testLs_rWithNonExistentDirectory() {
+            String[] args = {"-r", "nonExistentDir"};
+            commandHandler.ls_r(args);
+    
+            
+            assertEquals("This directory does not exist", outputStreamCaptor.toString().trim());
+        }
 
 }
