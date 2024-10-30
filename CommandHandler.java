@@ -39,10 +39,7 @@ public class CommandHandler {
             pwd();
 
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
-            if(args.length > 1)
-            {
-                ls_r(args[1]);
-            }else ls_r(System.getProperty("user.dir")); // Use the specified path or default to current directory
+             ls_r(args); // Use the specified path or default to current directory
 
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-a")) {
             ls_a(); // Implement this method to list all files, including hidden ones
@@ -190,15 +187,23 @@ public class CommandHandler {
         }
     }
 
-   public void ls_r(String arg)//take specific arg or by default get the content of current directory
+  public void ls_r(String []args)//take specific arg or by default get the content of current directory
     {
-        File Dir = currentDir.toFile(); // get the current directory as a File object
+        File Dir;
+
+        if (args.length <= 1) {
+            // Use current directory if no specific path is provided
+            Dir = currentDir.toFile();
+        } else {
+            // Use the provided directory path
+            Dir = new File(args[1]);
+        }
         if (!Dir.exists()) {
             System.out.println("This directory does not exist");
         }
-        if(!Dir.isDirectory())
+         else if(!Dir.isDirectory())
         {
-            System.out.println("This argument is not a directory");
+            System.out.println("This argument is not a directory, please provide a valid directory");
         }
         else{
             String [] arr = Dir.list(); //list content of directory that store in file
