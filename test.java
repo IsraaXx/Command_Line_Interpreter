@@ -10,12 +10,14 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class test {
     private CommandHandler commandHandler;
     private Path initialDir;
-private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private File tempDir;
     private File sourceFile;
     private File destinationDir;
@@ -43,6 +45,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         if (destinationFile.exists()) destinationFile.delete();
         if (tempDir.exists()) tempDir.delete();
     }
+    //cd command tests
     @Test
     void testCdToHomeDirectory() {
         commandHandler.cd();                  // No arguments, should go to the home directory
@@ -65,7 +68,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
             System.out.println("Directory 'targetsrc' does not exist in the current path.");
         }
     }
-
+    //rm command tests
     @Test
     void testRmSingleFile() throws IOException{
         // Create a temporary file in the current directory
@@ -100,7 +103,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         commandHandler.rm(new String[]{nonExistentFileName});
         System.out.println("Attempt to delete the non-existent file!");
     }
-
+    //mkdir command tests
     @Test
     void testMkdirCommand() throws IOException{
         String [] arg = {"testDir1","test2\\New"};
@@ -119,8 +122,8 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         commandHandler.mkdir(arg);
         assertTrue(directory.exists()&&directory.isDirectory(),"Directory Is already Exists");
     }
-    
 
+    //touch command tests
     @Test
     void testTouchCreateNewFile() throws IOException {
         String newFileName = "newTestFile.txt";
@@ -158,6 +161,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
 
         Files.deleteIfExists(filePath);
     }
+    //ls-a command tests
     @Test
     void testLsAListsHiddenFiles() throws IOException { //This test checks whether the ls -a command lists hidden files correctly.
         // Create a hidden file
@@ -219,13 +223,16 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     }
     @Test
     void testLsNotADirectory() throws IOException {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
+        //create a file
         Path file = Files.createFile(initialDir.resolve("fileTest.txt"));
         try{
 
             String[] args = { file.toString() };
+            //pass the created file to ls function
             commandHandler.ls(args);
             String output = outputStream.toString();
             assertTrue(output.contains("This is not a directory."));
@@ -235,16 +242,90 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
             Files.deleteIfExists(file);
         }
     }
-
-    //rmdir command tests
     @Test
-    void testRmdirDirectoryNotEmpty() throws Exception {
+    void testLsCommandSuccess() throws IOException {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
+        //create a directory
+        Path testDirectory = Files.createTempDirectory("testDirectory");
+        // Create some files in the test directory
+        File file1 = new File(testDirectory.toFile(), "file1.txt");
+        File file2 = new File(testDirectory.toFile(), "file2.txt");
+        File hiddenFile = new File(testDirectory.toFile(), ".hiddenFile.txt");
+
+        List.of(file1, file2, hiddenFile).forEach(file -> {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        try {
+            // Call the ls command
+            commandHandler.ls(new String[]{testDirectory.toString()});
+            String output = outputStream.toString();
+            // Capture and verify the output
+            assertTrue(output.contains("file1.txt"), "Expected 'file1.txt' to be listed in the output.");
+            assertTrue(output.contains("file2.txt"), "Expected 'file2.txt' to be listed in the output.");
+            assertTrue(!output.contains(".hiddenFile.txt"), "Expected '.hiddenFile.txt' to be excluded from the output.");
+        } finally {
+            // Restore System.out and clean up files
+            System.setOut(originalOut);
+            Files.deleteIfExists(file1.toPath());
+            Files.deleteIfExists(file2.toPath());
+            Files.deleteIfExists(hiddenFile.toPath());
+            Files.deleteIfExists(testDirectory);
+        }
+    }
+    @Test
+    void testLsCommandInCurrentDirectory() throws IOException {
+        // Set up to capture console output before calling the method
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(outputStream));
+        // Create temporary files in the current directory
+        Path currentDirectory = Path.of("").toAbsolutePath(); // Current directory path
+        Path file1 = Files.createFile(currentDirectory.resolve("testFile1.txt"));
+        Path file2 = Files.createFile(currentDirectory.resolve("testFile2.txt"));
+
+        try {
+            // Call ls without arguments to list files in the current directory
+            commandHandler.ls(new String[]{});
+
+            // Capture the output from the ls command
+            String output = outputStream.toString();
+
+            // Verify the output contains the files in the current directory
+            assertTrue(output.contains("testFile1.txt"),
+                    "Expected testFile1.txt to be listed in output: " + output);
+            assertTrue(output.contains("testFile2.txt"),
+                    "Expected testFile2.txt to be listed in output: " + output);
+
+        } finally {
+            // Restore original System.out after the test
+            System.setOut(originalOut);
+
+            // Cleanup: delete test files created in the current directory
+            Files.deleteIfExists(file1);
+            Files.deleteIfExists(file2);
+        }
+    }
+    //rmdir command tests
+    @Test
+    void testRmdirDirectoryNotEmpty() throws Exception {
+        // Set up to capture console output before calling the method
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(outputStream));
+        //create non-empty directory
         Path nonEmptyDir = Files.createDirectory(initialDir.resolve("nonEmptyDir"));
         try{
+            //create a file in the directory
             Files.createFile(nonEmptyDir.resolve("fileInDir.txt"));
+            //call the rmdir command
             commandHandler.rmdir(new String[]{nonEmptyDir.toString()});
             String output = outputStream.toString();
             assertTrue(output.contains("Failed to remove '" + nonEmptyDir.toString() + ": Directory not empty"));
@@ -257,10 +338,12 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     }
     @Test
     void testRmdirNoDirectorySpecified() {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
         try{
+            //call rmdir with empty array -> no directory specified
             commandHandler.rmdir(new String[]{});
             String output = outputStream.toString();
             assertTrue(output.contains("Specify an empty directory to be removed."));
@@ -271,11 +354,14 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     }
     @Test
     void testRmdirNotADirectory() throws Exception {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
+        //create a file
         Path testFile = Files.createFile(initialDir.resolve("testFile.txt"));
         try{
+            //pass the file to rmdir
             commandHandler.rmdir(new String[]{testFile.toString()});
             String output = outputStream.toString();
             assertTrue(output.contains("Failed to remove " + testFile.toString() + " :Not a directory."));
@@ -289,11 +375,13 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     //cat command tests
     @Test
     void testCatFileDoesNotExist() {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
         try{
             String nonExistentFile = "nonExistentFile.txt";
+            //call the cat with a file name that doesn't exist
             commandHandler.cat(new String[]{nonExistentFile});
             String output = outputStream.toString();
             assertTrue(output.contains("Failed to concatenate " + nonExistentFile + ": File doesn't exist."));
@@ -304,6 +392,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     }
     @Test
     void testCatValidFile() throws IOException {
+        // Set up to capture console output before calling the method
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(outputStream));
@@ -322,63 +411,64 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
             validFile.delete(); // Cleanup
         }
     }
-     @Test
+    //pwd command tests
+    @Test
     void testPwdCommand() {
         String expectedDirectory = System.getProperty("user.dir");
         assertEquals(("Current working directory: "+expectedDirectory), commandHandler.pwd());
     }
     //ls -r command tests
     @Test
-void testLs_rCurrentDirectory() {
-    
-    String[] args = {"-r"};
-    commandHandler.ls_r(args);
-    
-    // Capture output and trim whitespace for consistent comparison
-    String output = outputStreamCaptor.toString().trim();
-    
-    // Check if the output contains expected content
-    assertTrue(output.contains("Directory contents in reverse order:"), 
-               "Expected directory listing message in console output.");
-}
+    void testLs_rCurrentDirectory() {
+
+        String[] args = {"-r"};
+        commandHandler.ls_r(args);
+
+        // Capture output and trim whitespace for consistent comparison
+        String output = outputStreamCaptor.toString().trim();
+
+        // Check if the output contains expected content
+        assertTrue(output.contains("Directory contents in reverse order:"),
+                "Expected directory listing message in console output.");
+    }
     @Test
-        void testLs_rWithSpecificDirectory() throws IOException {
-           
-            Path tempDir = Files.createTempDirectory("testDir");
-            Files.createFile(tempDir.resolve("file1.txt"));
-            Files.createFile(tempDir.resolve("file2.txt"));
-            Files.createFile(tempDir.resolve("file3.txt"));
-    
-            String[] args = {"-r", tempDir.toString()};
-            commandHandler.ls_r(args);
-    
-            // Check if the output contains the file names in reverse order
-            String output = outputStreamCaptor.toString();
-            assertTrue(output.contains("file3.txt"));
-            assertTrue(output.contains("file2.txt"));
-            assertTrue(output.contains("file1.txt"));
-    
-            // Cleanup temporary files
-            Files.deleteIfExists(tempDir.resolve("file1.txt"));
-            Files.deleteIfExists(tempDir.resolve("file2.txt"));
-            Files.deleteIfExists(tempDir.resolve("file3.txt"));
-            Files.deleteIfExists(tempDir);
-        }
-    
+    void testLs_rWithSpecificDirectory() throws IOException {
+
+        Path tempDir = Files.createTempDirectory("testDir");
+        Files.createFile(tempDir.resolve("file1.txt"));
+        Files.createFile(tempDir.resolve("file2.txt"));
+        Files.createFile(tempDir.resolve("file3.txt"));
+
+        String[] args = {"-r", tempDir.toString()};
+        commandHandler.ls_r(args);
+
+        // Check if the output contains the file names in reverse order
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("file3.txt"));
+        assertTrue(output.contains("file2.txt"));
+        assertTrue(output.contains("file1.txt"));
+
+        // Cleanup temporary files
+        Files.deleteIfExists(tempDir.resolve("file1.txt"));
+        Files.deleteIfExists(tempDir.resolve("file2.txt"));
+        Files.deleteIfExists(tempDir.resolve("file3.txt"));
+        Files.deleteIfExists(tempDir);
+    }
+
     @Test
-         void testLs_rWithNonExistentDirectory() {
-            String[] args = {"-r", "nonExistentDir"};
-            commandHandler.ls_r(args);
-    
-            
-            assertEquals("This directory does not exist", outputStreamCaptor.toString().trim());
-        }
+    void testLs_rWithNonExistentDirectory() {
+        String[] args = {"-r", "nonExistentDir"};
+        commandHandler.ls_r(args);
+
+
+        assertEquals("This directory does not exist", outputStreamCaptor.toString().trim());
+    }
     //mv command tests
     @Test
-     void testMoveFileToDirectory() { //test for move filesrc to dirdestination
+    void testMoveFileToDirectory() { //test for move filesrc to dirdestination
         String[] args = {sourceFile.getAbsolutePath(), destinationDir.getAbsolutePath()};
         commandHandler.mv(args);
-        
+
         // Verify that the source file no longer exists
         assertFalse(sourceFile.exists(), "Source file should not exist after moving");
 
@@ -391,14 +481,14 @@ void testLs_rCurrentDirectory() {
     void testRenameFile() { //test for rename filesrc to filedestination
         String[] args = {sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath()};
         commandHandler.mv(args);
-        
+
         // Verify that the source file no longer exists
         assertFalse(destinationFile.exists(), "Source file should not exist after renaming");
-    
+
         // Verify that the file has been renamed
         assertTrue(sourceFile.exists(), "File should exist with the new name");
     }
-// append (>>) command tests
+    // append (>>) command tests
     @Test
     public void testAppendToFile_ExistingFile() throws IOException {
         File testFile = new File(tempDirect.toFile(), "testOutput.txt");
@@ -406,8 +496,8 @@ void testLs_rCurrentDirectory() {
         commandHandler.appendToFile("echo", new String[] {"new content", ">>", testFile.getAbsolutePath()});
         // check if both initial and new content are present
         String content = Files.readString(testFile.toPath());
-        assertTrue("File should contain initial content", content.contains("first content in the file"));
-        assertTrue("File should contain appended content", content.contains("new content"));
+        assertTrue(content.contains("first content in the file"), "File should contain initial content");
+        assertTrue(content.contains("new content"), "File should contain appended content");
     }
     @Test
     public void testAppendToFile_NonExistentFile() {
@@ -419,7 +509,7 @@ void testLs_rCurrentDirectory() {
         commandHandler.appendToFile("echo", new String[] {"some content", ">>", nonExistentFile.getAbsolutePath()});
         //  check for error message and that the file was not created
         assertTrue(consoleOutput.toString().contains("The specified file '" + nonExistentFile.getName() + "' does not exist."));
-        assertFalse("Non-existent file should not be created", nonExistentFile.exists());
+        assertFalse(nonExistentFile.exists(), "Non-existent file should not be created");
         System.setOut(System.out);
     }
 
