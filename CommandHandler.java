@@ -6,6 +6,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
 import java.util.Scanner;
+import java.util.List;
+
 
 public class CommandHandler {
     private Path currentDir;
@@ -118,6 +120,8 @@ public class CommandHandler {
             rmdir(args);
         } else if (command.equalsIgnoreCase("cat")) {
             cat(args);
+        }else if (command.equalsIgnoreCase("grep")) { 
+            grep(args);
         }
         else
             System.out.println(" Wrong Command. Type 'help' for the list of commands.");
@@ -150,10 +154,44 @@ public class CommandHandler {
         System.out.println("rm     - Remove a file");
         System.out.println("cat    - Display file contents");
         System.out.println("echo   - Echoes the input text");
+        System.out.println("grep   - Search for a specific pattern in a file."); //ex: grep hello test1.txt -> output line with hello word if found in the file test1.txt
         System.out.println(">      - Redirects the output of the first command to be written to a file.");
         System.out.println(">>     - Redirects the output of the first command to be append to a file.");
         System.out.println("exit   - Exits the CLI");
 
+    }
+    public void grep(String[] args) {
+        // Check if the correct number of arguments is provided
+        if (args.length < 2) {
+            System.out.println("Usage: grep <pattern> <file>");
+            return;
+        }
+
+        // Trim the input arguments to avoid leading/trailing whitespace issues
+        String pattern = args[0].trim();
+        String fileName = args[1].trim();
+
+        try {
+            // Read all lines from the specified file
+            List<String> lines = Files.readAllLines(Paths.get(fileName));
+            boolean found = false; // Flag to check if any match is found
+
+            // Iterate through each line in the file
+            for (String line : lines) {
+                // Check if the line contains the specified pattern
+                if (line.contains(pattern)) {
+                    System.out.println(line);
+                    found = true; // Set flag to true if a match is found
+                }
+            }
+
+            // If no lines were found, indicate that
+            if (!found) {
+                System.out.println("No lines found containing: " + pattern);
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
     }
     public void echo(String[] args) {
         if (args.length == 0) {
