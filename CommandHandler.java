@@ -19,6 +19,34 @@ public class CommandHandler {
         return currentDir;
     }
     public void handleCommands(String command, String[] args){
+        boolean appendToFile = false;
+        File appendFile = null;  //reference the file to which output is appended.
+    
+        if (args.length >= 2 && args[args.length - 2].equals(">>")) { //returns the second-to-last element
+            appendToFile = true;
+            appendFile = new File(args[args.length - 1]);
+            if (!appendFile.exists()) {
+            System.out.println("The specified file '" + appendFile.getName() + "' does not exist.");
+            return;
+        }
+            args = java.util.Arrays.copyOf(args, args.length - 2); // Remove ">>" and filename from args
+        }
+    
+        //originalOut stores the current System.out stream (usually the console) so it can be restored later.
+        PrintStream originalOut = System.out; 
+        //fileOut will be used to redirect output to appendFile if appending is required.
+        PrintStream fileOut = null;
+
+        if (appendToFile) {
+            try {
+                fileOut = new PrintStream(new FileOutputStream(appendFile, true));
+                System.setOut(fileOut);
+            } catch (FileNotFoundException e) {
+                System.out.println("Error: Cannot write to file " + appendFile.getName());
+                return;
+            }
+        }
+      
         if (command.equalsIgnoreCase("help")&&args.length==0)
             help();
         else if (command.equalsIgnoreCase("echo"))
@@ -65,6 +93,11 @@ public class CommandHandler {
         }
         else
             System.out.println(" Wrong Command. Type 'help' for the list of commands.");
+     // Restore original System.out
+    if (appendToFile) {
+        System.setOut(originalOut);
+        System.out.println("Output appended to " + appendFile.getName());
+    }   
     }
     public void help(){
 
