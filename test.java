@@ -20,6 +20,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
     private File sourceFile;
     private File destinationDir;
     private File destinationFile;
+    private Path tempDirect;
     @BeforeEach
     void setUp()  throws IOException {
         commandHandler = new CommandHandler();
@@ -32,6 +33,7 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         destinationDir = new File(tempDir, "destinationDir");// Create destination directory
         destinationDir.mkdir();
         destinationFile = new File(tempDir, "destination.txt");
+        tempDirect = Files.createTempDirectory("testDir");
     }
     @AfterEach
     public void cleanAfterTest() {
@@ -396,6 +398,29 @@ void testLs_rCurrentDirectory() {
         // Verify that the file has been renamed
         assertTrue(sourceFile.exists(), "File should exist with the new name");
     }
-
+// append (>>) command tests
+    @Test
+    public void testAppendToFile_ExistingFile() throws IOException {
+        File testFile = new File(tempDirect.toFile(), "testOutput.txt");
+        Files.writeString(testFile.toPath(), "first content in the file\n");
+        commandHandler.appendToFile("echo", new String[] {"new content", ">>", testFile.getAbsolutePath()});
+        // check if both initial and new content are present
+        String content = Files.readString(testFile.toPath());
+        assertTrue("File should contain initial content", content.contains("first content in the file"));
+        assertTrue("File should contain appended content", content.contains("new content"));
+    }
+    @Test
+    public void testAppendToFile_NonExistentFile() {
+        //  create a path for a file that does not exist
+        File nonExistentFile = new File(tempDirect.toFile(), "nonExistentFile.txt");
+        // Capture console output to verify error message
+        ByteArrayOutputStream consoleOutput = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(consoleOutput));
+        commandHandler.appendToFile("echo", new String[] {"some content", ">>", nonExistentFile.getAbsolutePath()});
+        //  check for error message and that the file was not created
+        assertTrue(consoleOutput.toString().contains("The specified file '" + nonExistentFile.getName() + "' does not exist."));
+        assertFalse("Non-existent file should not be created", nonExistentFile.exists());
+        System.setOut(System.out);
+    }
 
 }
