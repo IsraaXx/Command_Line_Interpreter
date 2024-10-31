@@ -1,4 +1,3 @@
-package org.example;
 
 import javax.security.sasl.SaslClient;
 import java.io.*;
