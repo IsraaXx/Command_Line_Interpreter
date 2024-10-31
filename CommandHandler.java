@@ -157,6 +157,7 @@ public class CommandHandler {
         System.out.println("grep   - Search for a specific pattern in a file."); //ex: grep hello test1.txt -> output line with hello word if found in the file test1.txt
         System.out.println(">      - Redirects the output of the first command to be written to a file.");
         System.out.println(">>     - Redirects the output of the first command to be append to a file.");
+        System.out.println("|      - Pipes output of one command to another command as input.");
         System.out.println("exit   - Exits the CLI");
 
     }
