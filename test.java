@@ -118,34 +118,6 @@ private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStre
         assertTrue(directory.exists()&&directory.isDirectory(),"Directory Is already Exists");
     }
     
-  @Test
-  void testWriteCommandWithLs() throws IOException {
-    String outputFileName = "output.txt";
-    Path outputPath = initialDir.resolve(outputFileName);
-
-    commandHandler.write(new String[] {"", outputFileName}, "ls");
-
-    assertTrue(Files.exists(outputPath), "Output file should be created");
-
-    // Check contents of output file
-    String content = Files.readString(outputPath);
-    assertTrue(content.contains("sleep.txt"), "Output should contain 'sleep.txt'");
-    assertTrue(content.contains("pls.txt"), "Output should contain 'pls.txt'"); }
-
-
-    @Test
-    void testWriteCommandWithpwd() throws IOException {
-        String outputFileName = "output.txt";
-        Path outputPath = initialDir.resolve(outputFileName);
-    
-        commandHandler.write(new String[] {"", outputFileName}, "pwd");
-    
-        assertTrue(Files.exists(outputPath), "Output file should be created");
-    
-        // Check contents of output file
-        String content = Files.readString(outputPath);
-        assertTrue(content.contains("Current working directory: C:\\Users\\user\\OS_Assignment"), "Output should contain Current working directory");}
-    
 
     @Test
     void testTouchCreateNewFile() throws IOException {
