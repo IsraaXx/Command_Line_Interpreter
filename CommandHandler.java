@@ -18,9 +18,42 @@ public class CommandHandler {
         return currentDir;
     }
     public void handleCommands(String command, String[] args){
+         boolean overwriteToFile = false;
+        File targetFile = null;
+        // Check if the second-to-last argument is '>'
+        if (args.length >= 2 && args[args.length - 2].equals(">")) {
+            overwriteToFile = true;
+            targetFile = new File(args[args.length - 1]);
+            // Create the file if it does not exist
+            try {
+                if (targetFile.createNewFile()) {
+                    System.out.println("File created: " + targetFile.getName());
+                }
+            } catch (IOException e) {
+                System.out.println("Error creating file: " + e.getMessage());
+                return;
+            }
+            // Remove the last two elements (operator and filename) from args
+            args = java.util.Arrays.copyOf(args, args.length - 2);
+        }
+        // Save the original System.out stream to restore later
+        PrintStream originalOutt = System.out;
+        PrintStream fileOutt = null;
+        
+        if (overwriteToFile) {
+            try {
+                // Open the file to overwrite the file content
+                fileOutt = new PrintStream(new FileOutputStream(targetFile, false)); // `false` for overwrite mode
+                System.setOut(fileOutt);  // Redirect System.out to the file
+            } catch (FileNotFoundException e) {
+                System.out.println("Error: Cannot write to file " + targetFile.getName());
+                return;
+            }
+        }
+
+        
         boolean appendToFile = false;
         File appendFile = null;  //reference the file to which output is appended.
-    
         if (args.length >= 2 && args[args.length - 2].equals(">>")) { //returns the second-to-last element
             appendToFile = true;
             appendFile = new File(args[args.length - 1]);
@@ -62,10 +95,6 @@ public class CommandHandler {
             if(args.length==0)
                 System.out.println("Please Enter Directory Name to make");
             mkdir(args);}   
-        else if (args.length>0 && (args[0].equals(">"))){
-            write(args,command);
-
-        }
         else if (command.equalsIgnoreCase("pwd"))
             pwd();
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
@@ -92,6 +121,13 @@ public class CommandHandler {
         }
         else
             System.out.println(" Wrong Command. Type 'help' for the list of commands.");
+
+          if (fileOutt != null) {
+                fileOutt.close();
+                System.setOut(originalOutt);
+                System.out.println("Output written to " + targetFile.getAbsolutePath());
+            }
+        
      // Restore original System.out
     if (appendToFile) {
         System.setOut(originalOut);
@@ -183,33 +219,6 @@ public class CommandHandler {
         }
     }
 
-    public void write(String[] args,String command){
-        Path filePath = currentDir.resolve(args[1]); //  file path
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        PrintStream originalOut = System.out; // Save original System.out
-        System.setOut(new PrintStream(buffer)); // Redirect System.out to buffer
-        
-        if (command.equals("ls")) {
-            ls(new String[0]);  }
-        else if (command.equals("help")){
-            help();
-        }    
-        else if(command.equals("pwd")){
-            System.out.print(pwd());
-        }
-
-        // Restore original System.out to console to continue the program
-        System.setOut(originalOut);
-
-        // Write captured output to the specified file
-        try (FileWriter writer = new FileWriter(filePath.toFile())) {
-            writer.write(buffer.toString());
-            System.out.println("Output written to " + filePath);
-        } catch (IOException e) {
-            System.err.println("Error writing to file: " + e.getMessage());
-    }
-           
-    }
    public String pwd() {
        return ("Current working directory: " + currentDir);
     }
