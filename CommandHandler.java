@@ -20,6 +20,14 @@ public class CommandHandler {
         return currentDir;
     }
     public void handleCommands(String command, String[] args){
+        // Handle pipe command
+        if (args.length >= 3 && args[args.length - 2].equals("|")) {
+            // Split args at the pipe operator
+            String[] firstCommandArgs = java.util.Arrays.copyOf(args, args.length - 2);
+            String[] secondCommandArgs = {args[args.length - 1]};
+            executePipedCommands(command, firstCommandArgs, secondCommandArgs);
+            return; // Exit early to avoid further command handling
+        }
          boolean overwriteToFile = false;
         File targetFile = null;
         // Check if the second-to-last argument is '>'
@@ -169,6 +177,46 @@ public class CommandHandler {
         System.out.println("|      - Pipes output of one command to another command as input.");
         System.out.println("exit   - Exits the CLI");
 
+    }
+    private void executePipedCommands(String command, String[] firstCommandArgs, String[] secondCommandArgs) {
+        // Execute the first command and capture its output
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(outputStream);
+        PrintStream originalOut = System.out;
+
+        // Redirect output to the ByteArrayOutputStream
+        System.setOut(printStream);
+
+        // Execute the first command
+        handleCommands(command, firstCommandArgs);
+
+        // Restore original System.out
+        System.setOut(originalOut);
+
+        // Get the output from the first command
+        String firstCommandOutput = outputStream.toString();
+
+        // Execute the second command with the output of the first command as input
+        if (command.equalsIgnoreCase("grep")) {
+            // Pass the output of the first command to grep
+            String[] grepArgs = {secondCommandArgs[0], firstCommandOutput};
+            grep(grepArgs);
+        }else if (command.equalsIgnoreCase("cat")) {
+            // Pass the output of the first command to cat
+            String[] catArgs = {firstCommandOutput};
+            cat(catArgs);
+        } else if (command.equalsIgnoreCase("ls")) {
+            // Pass the output of the first command to ls
+            String[] lsArgs = {firstCommandOutput};
+            ls(lsArgs);
+        } else if (command.equalsIgnoreCase("echo")) {
+            // Pass the output of the first command to echo
+            String[] echoArgs = {firstCommandOutput};
+            echo(echoArgs);
+        }  else {
+            // Handle other piped commands as needed
+            System.out.println("Piping not supported for this command.");
+        }
     }
     public void grep(String[] args) {
         // Check if the correct number of arguments is provided
