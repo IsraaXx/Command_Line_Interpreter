@@ -488,6 +488,21 @@ public class test {
         // Verify that the file has been renamed
         assertTrue(sourceFile.exists(), "File should exist with the new name");
     }
+
+     @Test
+    public void WriteTest() {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(buffer));
+        System.setOut(originalOut);
+        String outputLog = buffer.toString();
+        if (outputLog.contains("Output written to")) {
+            System.out.println("Test passed: 'Output written to' message found.");
+        } else {
+            System.out.println("Test failed: 'Output written to' message not found.");
+        }
+    }
+    
     // append (>>) command tests
     @Test
     public void testAppendToFile_ExistingFile() throws IOException {
