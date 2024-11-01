@@ -85,7 +85,7 @@ public class CommandHandler {
                 System.out.println("Please Enter Directory Name to make");
             mkdir(args);}   
         else if (command.equalsIgnoreCase("pwd"))
-            pwd();
+          System .out.println( pwd());
         else if (command.equalsIgnoreCase("ls") && args.length > 0 && args[0].equalsIgnoreCase("-r"))
              ls_r(args); // Use the specified path or default to current directory
 
